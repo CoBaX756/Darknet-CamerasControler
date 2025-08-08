@@ -233,10 +233,16 @@ verify_installation() {
     fi
     
     # Verificar Darknet
-    if [ -f "darknet/build/darknet" ] || [ -f "darknet/darknet" ]; then
+    if [ -f "darknet/build/darknet" ] || [ -f "darknet/darknet" ] || [ -f "darknet/build/src-cli/darknet" ]; then
         print_message "Darknet compilado correctamente"
+        # Si está en src-cli, crear enlace simbólico para compatibilidad
+        if [ -f "darknet/build/src-cli/darknet" ] && [ ! -f "darknet/build/darknet" ]; then
+            ln -sf src-cli/darknet darknet/build/darknet
+        fi
     else
         print_error "Darknet no se compiló correctamente"
+        print_message "Buscando ejecutable darknet..."
+        find darknet -name "darknet" -type f -executable 2>/dev/null || true
         exit 1
     fi
     
