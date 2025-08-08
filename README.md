@@ -47,27 +47,27 @@ Deteccion/
 
 ## Instalación Rápida
 
-### Opción 1: Descarga Directa (Sin Git)
+### Opción 1: Instalación Completa (Recomendado)
 
 ```bash
-# Descargar como ZIP
-wget https://github.com/CoBaX756/Darknet-CamerasControler/archive/refs/heads/main.zip
-unzip main.zip
-cd Darknet-CamerasControler-main
+# Clonar el repositorio (incluye Darknet preconfigurado)
+git clone https://github.com/CoBaX756/Darknet-CamerasControler.git
+cd Darknet-CamerasControler
 
-# Ejecutar script de instalación
+# Ejecutar script de instalación (solo instala dependencias)
 chmod +x install.sh
 ./install.sh
 ```
 
-### Opción 2: Clonar con Git
+### Opción 2: Descarga como ZIP
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/CoBaX756/Darknet-CamerasControler.git
-cd Darknet-CamerasControler
+# Descargar todo el proyecto
+wget https://github.com/CoBaX756/Darknet-CamerasControler/archive/refs/heads/main.zip
+unzip main.zip
+cd Darknet-CamerasControler-main
 
-# Ejecutar script de instalación
+# Instalar dependencias
 chmod +x install.sh
 ./install.sh
 ```
@@ -96,20 +96,15 @@ chmod +x install.sh
    pip3 install -r requirements.txt
    ```
 
-4. **Compilar Darknet:**
+4. **Compilar Darknet (si es necesario):**
    ```bash
+   # Darknet ya viene precompilado, pero si necesitas recompilar:
    cd darknet
+   rm -rf build
    mkdir build && cd build
    cmake ..
    make -j$(nproc)
    cd ../..
-   ```
-
-5. **Descargar modelo YOLOv4-tiny (si no está incluido):**
-   ```bash
-   # El archivo yolov4-tiny.weights ya está incluido
-   # Si necesitas descargarlo nuevamente:
-   # wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights -O darknet/yolov4-tiny.weights
    ```
 
 ## Uso
@@ -229,7 +224,7 @@ Las contribuciones son bienvenidas. Por favor:
 
 Este proyecto está licenciado bajo MIT License - ver el archivo [LICENSE](docs/licenses/LICENSE) para más detalles.
 
-**Nota importante:** Este proyecto utiliza Darknet (fork de Hank.ai) que está licenciado bajo Apache License 2.0. El directorio `darknet/` no está incluido en este repositorio y debe ser descargado por separado. Ver [SETUP_DARKNET.md](docs/setup/SETUP_DARKNET.md) para más información.
+**Nota importante:** Este proyecto incluye Darknet (fork de Hank.ai) que está licenciado bajo Apache License 2.0. Ver [LICENSE](docs/licenses/LICENSE) para más detalles sobre las licencias.
 
 ## Soporte
 

@@ -118,24 +118,10 @@ install_python_deps() {
 compile_darknet() {
     print_message "Preparando Darknet..."
     
-    # Si darknet no existe, descargarlo
+    # Verificar que darknet existe (ya está incluido en el repo)
     if [ ! -d "darknet" ]; then
-        print_message "Darknet no encontrado. Descargando desde GitHub..."
-        print_message "Repositorio: $DARKNET_REPO"
-        
-        git clone $DARKNET_REPO darknet
-        if [ $? -ne 0 ]; then
-            print_error "Error al descargar Darknet"
-            exit 1
-        fi
-        
-        cd darknet
-        print_message "Usando versión de Darknet: $DARKNET_VERSION"
-        git checkout $DARKNET_VERSION
-        if [ $? -ne 0 ]; then
-            print_warning "No se pudo cambiar a la versión $DARKNET_VERSION, usando master"
-        fi
-        cd ..
+        print_error "Directorio darknet no encontrado. Asegúrate de haber clonado el repositorio completo."
+        exit 1
     fi
     
     cd darknet
@@ -168,14 +154,6 @@ compile_darknet() {
     cd ../..
     print_message "Darknet compilado exitosamente"
     
-    # Aplicar personalizaciones si existen
-    if [ -d "darknet-custom" ] && [ -f "darknet-custom/install.sh" ]; then
-        print_message "Aplicando personalizaciones de Darknet..."
-        cd darknet-custom
-        chmod +x install.sh
-        ./install.sh
-        cd ..
-    fi
 }
 
 # Verificar modelo YOLO
@@ -260,9 +238,7 @@ verify_installation() {
 
 # Cargar configuración
 load_config() {
-    # Valores por defecto
-    DARKNET_VERSION="v3.0.53"
-    DARKNET_REPO="https://github.com/hank-ai/darknet.git"
+    # Valores por defecto para compilación
     YOLO_WEIGHTS_URL="https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights"
     ENABLE_CUDA="OFF"
     ENABLE_OPENCV="ON"
@@ -271,13 +247,7 @@ load_config() {
     if [ -f ".env" ]; then
         print_message "Cargando configuración desde .env"
         source .env
-    elif [ -f ".env.example" ]; then
-        print_message "Usando configuración por defecto (.env.example)"
-        cp .env.example .env
-        source .env
     fi
-    
-    print_message "Versión de Darknet configurada: $DARKNET_VERSION"
 }
 
 # Función principal

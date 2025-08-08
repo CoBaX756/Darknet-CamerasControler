@@ -37,16 +37,14 @@ venv.bak/
 dist/
 *.egg
 
-# Darknet directory (submodule or separate repo)
-darknet/
+# Darknet - Ahora incluido en el repositorio
+# darknet/  # Comentado - Darknet ahora se incluye con el proyecto
 
-# Build directories
-build/
-build*/
-old_CMakeFiles/
-CMakeFiles/
-CMakeCache.txt
+# Build directories (pero permitir darknet/build que ya está compilado)
+darknet/build2/
+darknet/old_CMakeFiles/
 *.cmake
+!darknet/CM*.cmake
 *.o
 *.so
 *.a
