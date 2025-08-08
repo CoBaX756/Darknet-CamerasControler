@@ -112,7 +112,7 @@ node src/server/api_server.js
 ### Acceder a la interfaz web
 
 Abrir en el navegador:
-- Panel de control: `http://localhost:3000/src/frontend/panel.html`
+- Panel de control: `http://localhost:3000/src/frontend/panel.html` o `http://localhost:3000`
 - Visor de streams: `http://localhost:3000/src/frontend/stream_viewer.html`
 
 ### Detener el sistema
