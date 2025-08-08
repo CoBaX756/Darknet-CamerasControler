@@ -218,6 +218,18 @@ async function startCamera(cameraId) {
     ];
     
     try {
+        // Verificar que el ejecutable existe y es ejecutable
+        try {
+            await fs.access(SIMPLE_STREAM, fs.constants.X_OK);
+        } catch (err) {
+            console.error(`ERROR: No se puede ejecutar ${SIMPLE_STREAM}`);
+            console.error(`  Verifica que el archivo existe y tiene permisos de ejecución`);
+            return { status: 'error', error: `Ejecutable no encontrado o sin permisos: ${SIMPLE_STREAM}`, camera };
+        }
+        
+        console.log(`Iniciando cámara ${cameraId} con comando:`);
+        console.log(`  ${SIMPLE_STREAM} ${args.join(' ')}`);
+        
         const proc = spawn(SIMPLE_STREAM, args, {
             cwd: DARKNET_DIR,
             env: { ...process.env, LD_LIBRARY_PATH: '/usr/local/cuda/lib64' }
@@ -229,13 +241,21 @@ async function startCamera(cameraId) {
         
         proc.stdout.on('data', (data) => {
             logStream.write(data);
+            console.log(`[Camera ${cameraId}]: ${data.toString().trim()}`);
         });
         
         proc.stderr.on('data', (data) => {
             logStream.write(data);
+            console.error(`[Camera ${cameraId} ERROR]: ${data.toString().trim()}`);
+        });
+        
+        proc.on('error', (error) => {
+            console.error(`Error iniciando cámara ${cameraId}:`, error);
+            logStream.write(`Error: ${error.message}\n`);
         });
         
         proc.on('exit', (code) => {
+            console.log(`Cámara ${cameraId} terminó con código: ${code}`);
             logStream.close();
             cameraProcesses.delete(cameraId);
         });
@@ -248,9 +268,11 @@ async function startCamera(cameraId) {
         if (proc.exitCode === null) {
             return { status: 'started', camera };
         } else {
-            return { status: 'failed', camera };
+            console.error(`Cámara ${cameraId} falló al iniciar. Código de salida: ${proc.exitCode}`);
+            return { status: 'failed', camera, exitCode: proc.exitCode };
         }
     } catch (error) {
+        console.error(`Error crítico iniciando cámara ${cameraId}:`, error);
         return { status: 'error', error: error.message, camera };
     }
 }
