@@ -69,7 +69,7 @@ check_requirements() {
     fi
     
     # Darknet
-    if [ -f "$PROJECT_DIR/darknet/build/src-examples/web_stream_mjpeg" ]; then
+    if [ -f "$PROJECT_DIR/darknet/build/darknet" ] || [ -f "$PROJECT_DIR/darknet/darknet" ] || [ -f "$PROJECT_DIR/darknet/build/src-cli/darknet" ]; then
         echo -e "  ${GREEN}✓${NC} Darknet compilado"
     else
         echo -e "  ${RED}✗${NC} Darknet no compilado"
@@ -111,7 +111,7 @@ install_dependencies() {
 compile_darknet() {
     echo -e "${YELLOW}🔨 Verificando compilación de Darknet...${NC}"
     
-    if [ ! -f "$PROJECT_DIR/darknet/build/src-examples/web_stream_mjpeg" ]; then
+    if [ ! -f "$PROJECT_DIR/darknet/build/darknet" ] && [ ! -f "$PROJECT_DIR/darknet/darknet" ] && [ ! -f "$PROJECT_DIR/darknet/build/src-cli/darknet" ]; then
         echo -e "${YELLOW}Compilando Darknet (esto puede tardar unos minutos)...${NC}"
         cd "$PROJECT_DIR/darknet/build"
         cmake .. > /dev/null 2>&1
@@ -148,12 +148,13 @@ start_server() {
         fuser -k ${port}/tcp 2>/dev/null
     done
     
-    # Iniciar servidor en background (usar v2 si existe)
+    # Iniciar servidor en background
     cd "$PROJECT_DIR"
-    if [ -f "dynamic_server_v2.js" ]; then
-        nohup node dynamic_server_v2.js > "$LOG_FILE" 2>&1 &
+    if [ -f "src/server/api_server.js" ]; then
+        nohup node src/server/api_server.js > "$LOG_FILE" 2>&1 &
     else
-        nohup node dynamic_server.js > "$LOG_FILE" 2>&1 &
+        echo -e "${RED}✗ No se encontró el archivo del servidor${NC}"
+        return 1
     fi
     SERVER_PID=$!
     echo $SERVER_PID > "$PID_FILE"
