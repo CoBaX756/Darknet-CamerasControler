@@ -278,6 +278,14 @@ main() {
     # Verificar instalación
     verify_installation
     
+    # Instalar personalizaciones si existen
+    if [ -d "darknet-custom" ]; then
+        print_message "Instalando personalizaciones de Darknet..."
+        cd darknet-custom
+        ./install.sh
+        cd ..
+    fi
+    
     echo
     echo "========================================"
     print_message "¡Instalación completada exitosamente!"
