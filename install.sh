@@ -347,10 +347,10 @@ main() {
     echo "========================================"
     echo
     print_message "Para iniciar el sistema, ejecuta:"
-    echo "  node src/server/api_server.js"
+    echo "  ./start.sh"
     echo
-    print_message "O usa el script de inicio:"
-    echo "  ./scripts/start.sh"
+    print_message "O directamente con Node:"
+    echo "  node src/server/api_server.js"
     echo
     print_message "Accede al panel de control en:"
     echo "  http://localhost:3000/src/frontend/panel.html"
