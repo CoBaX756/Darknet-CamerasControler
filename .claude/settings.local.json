@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(chmod:*)",
+      "Bash(./stop_multi_camera.sh:*)",
+      "Bash(ls:*)",
+      "Bash(./stop.sh)",
+      "Bash(cmake:*)",
+      "Bash(make:*)",
+      "Bash(pkill:*)"
+    ],
+    "deny": []
+  }
+}

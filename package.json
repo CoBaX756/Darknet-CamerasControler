@@ -1,0 +1,20 @@
+{
+  "name": "yolo-camera-manager",
+  "version": "1.0.0",
+  "description": "Sistema dinámico de gestión de cámaras RTSP con detección YOLO",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "multer": "^2.0.2",
+    "node-rtsp-stream": "^0.0.9",
+    "ws": "^8.18.3"
+  }
+}

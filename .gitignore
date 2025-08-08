@@ -1,0 +1,123 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/*.log
+*.log
+yolo_server.log
+web_stream.log
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+.yolo_server.pid
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+*.pyc
+__pycache__/
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+*.egg-info/
+dist/
+*.egg
+
+# Darknet directory (submodule or separate repo)
+darknet/
+
+# Build directories
+build/
+build*/
+old_CMakeFiles/
+CMakeFiles/
+CMakeCache.txt
+*.cmake
+*.o
+*.so
+*.a
+*.exe
+*.dll
+*.dylib
+
+# YOLO model files (large files)
+*.weights
+*.backup
+*.pt
+*.pb
+*.onnx
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+tmp/
+temp/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# Configuration backups
+config/*_private.json
+cameras_config_backup.json
+*.backup
+*.old
+*.bak
+*.tar.gz
+
+# Test files
+test_*.js
+*.test.js
+test_results/
+output/
+predictions/
+
+# Media files (to keep repo size small)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# RTSP streams cache
+web_stream/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/

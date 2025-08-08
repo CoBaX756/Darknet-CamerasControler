@@ -1,0 +1,56 @@
+{
+  "models": [
+    {
+      "id": "yolov4-tiny",
+      "name": "YOLOv4-tiny (Por defecto)",
+      "description": "Modelo ligero, rápido para detección general",
+      "config": "cfg/yolov4-tiny.cfg",
+      "weights": "yolov4-tiny.weights",
+      "names": "cfg/coco.names",
+      "type": "coco",
+      "classes": 80
+    },
+    {
+      "id": "yolov4",
+      "name": "YOLOv4 (Completo)",
+      "description": "Modelo completo, más preciso pero más lento",
+      "config": "cfg/yolov4.cfg",
+      "weights": "yolov4.weights",
+      "names": "cfg/coco.names",
+      "type": "coco",
+      "classes": 80
+    },
+    {
+      "id": "yolov3-tiny",
+      "name": "YOLOv3-tiny",
+      "description": "Versión anterior, muy rápida",
+      "config": "cfg/yolov3-tiny.cfg",
+      "weights": "yolov3-tiny.weights",
+      "names": "cfg/coco.names",
+      "type": "coco",
+      "classes": 80
+    },
+    {
+      "id": "yolov7-tiny",
+      "name": "YOLOv7-tiny",
+      "description": "Versión más reciente, equilibrio entre velocidad y precisión",
+      "config": "cfg/yolov7-tiny.cfg",
+      "weights": "yolov7-tiny.weights",
+      "names": "cfg/coco.names",
+      "type": "coco",
+      "classes": 80
+    }
+  ],
+  "customModels": [
+    {
+      "id": "custom_1754465932538",
+      "name": "people-r-people",
+      "description": "Detección de personas universal",
+      "config": "custom_models/people-r-people.cfg",
+      "weights": "custom_models/people-r-people.weights",
+      "names": "custom_models/people-r-people.names",
+      "type": "custom",
+      "classes": 2
+    }
+  ]
+}

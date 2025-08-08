@@ -1,0 +1,241 @@
+{
+  "info": {
+    "name": "Sistema de Detección YOLO - API",
+    "description": "Colección de endpoints para el sistema de detección con cámaras YOLO",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Cámaras",
+      "item": [
+        {
+          "name": "Obtener todas las cámaras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/cameras",
+            "description": "Obtiene la lista de todas las cámaras configuradas"
+          }
+        },
+        {
+          "name": "Obtener cámara específica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/cameras/1",
+            "description": "Obtiene información de una cámara específica por ID"
+          }
+        },
+        {
+          "name": "Iniciar cámara",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/cameras/1/start",
+            "description": "Inicia el streaming de una cámara específica"
+          }
+        },
+        {
+          "name": "Detener cámara",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/cameras/1/stop",
+            "description": "Detiene el streaming de una cámara específica"
+          }
+        },
+        {
+          "name": "Actualizar cámara",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cámara Actualizada\",\n  \"ip\": \"192.168.1.124\",\n  \"username\": \"admin\",\n  \"password\": \"password123\",\n  \"path\": \"/Streaming/Channels/1\",\n  \"modelId\": \"yolov4-tiny\"\n}"
+            },
+            "url": "{{base_url}}/api/cameras/1",
+            "description": "Actualiza la configuración de una cámara"
+          }
+        },
+        {
+          "name": "Agregar nueva cámara",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nueva Cámara\",\n  \"ip\": \"192.168.1.200\",\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"path\": \"/Streaming/Channels/1\",\n  \"modelId\": \"yolov4-tiny\"\n}"
+            },
+            "url": "{{base_url}}/api/cameras",
+            "description": "Agrega una nueva cámara al sistema"
+          }
+        },
+        {
+          "name": "Eliminar cámara",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/cameras/5",
+            "description": "Elimina una cámara del sistema"
+          }
+        },
+        {
+          "name": "Actualizar configuración avanzada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quality\": \"high\",\n  \"resolution\": \"1080p\",\n  \"jpegQuality\": 85,\n  \"detectionEnabled\": true,\n  \"showBoundingBoxes\": true,\n  \"showLabels\": true,\n  \"showConfidence\": true,\n  \"minConfidence\": 0.5\n}"
+            },
+            "url": "{{base_url}}/api/cameras/1/settings",
+            "description": "Actualiza la configuración avanzada de calidad y detección"
+          }
+        },
+        {
+          "name": "Reiniciar cámara",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/cameras/1/restart",
+            "description": "Reinicia una cámara con nueva configuración"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Detección",
+      "item": [
+        {
+          "name": "Obtener configuración de detección",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/detection/config/1",
+            "description": "Obtiene la configuración de detección para una cámara"
+          }
+        },
+        {
+          "name": "Actualizar configuración de detección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": {\n    \"0\": true,\n    \"1\": false,\n    \"2\": true,\n    \"3\": false\n  }\n}"
+            },
+            "url": "{{base_url}}/api/detection/config/1",
+            "description": "Actualiza qué objetos detectar (0=persona, 1=bicicleta, 2=carro, etc.)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modelos",
+      "item": [
+        {
+          "name": "Obtener todos los modelos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/models",
+            "description": "Obtiene la lista de modelos YOLO disponibles"
+          }
+        },
+        {
+          "name": "Cargar modelo personalizado",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Mi Modelo Custom",
+                  "type": "text"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "description": "Archivo .cfg del modelo"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "description": "Archivo .weights del modelo"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "description": "Archivo .names con las clases"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/models/upload",
+            "description": "Carga un modelo YOLO personalizado (.cfg, .weights, .names)"
+          }
+        },
+        {
+          "name": "Eliminar modelo personalizado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/models/custom_123456789",
+            "description": "Elimina un modelo personalizado del sistema"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sistema",
+      "item": [
+        {
+          "name": "Estado del sistema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/status",
+            "description": "Obtiene el estado general del sistema"
+          }
+        },
+        {
+          "name": "Detener todas las cámaras",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/stop-all",
+            "description": "Detiene todas las cámaras activas"
+          }
+        }
+      ]
+    }
+  ]
+}

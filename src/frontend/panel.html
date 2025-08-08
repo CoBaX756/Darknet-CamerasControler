@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cámaras YOLO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: normal;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #f5f5f5;
+        }
+        
+        button.primary {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+        
+        button.primary:hover {
+            background: #45a049;
+        }
+        
+        button.danger {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        
+        button.danger:hover {
+            background: #da190b;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e5e5e5;
+            font-weight: 500;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .camera-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status.online {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status.offline {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        a, .action-btn {
+            color: #2196f3;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+        }
+        
+        a:hover, .action-btn:hover {
+            background: #e3f2fd;
+        }
+        
+        .info {
+            padding: 20px;
+            background: #fafafa;
+            border-top: 1px solid #e5e5e5;
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .loading {
+            display: none;
+            padding: 10px;
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .detection-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .detection-btn:hover {
+            background: #1976d2;
+            color: white;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 50px auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+        
+        .detection-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .detection-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detection-item input[type="checkbox"] {
+            margin-right: 15px;
+        }
+        
+        .detection-item label {
+            flex: 1;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e5e5e5;
+            text-align: right;
+        }
+        
+        .modal-footer button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Cámaras YOLO</h1>
+            <div class="control-buttons">
+                <button class="primary" onclick="startAllCameras()">▶ Iniciar Todo</button>
+                <button class="danger" onclick="stopAllCameras()">■ Detener Todo</button>
+                <button onclick="refreshStatus()">↻ Actualizar</button>
+                <button onclick="openAddCameraModal()" style="background: #2196f3; color: white;">+ Nueva Cámara</button>
+                <button onclick="openModelsModal()" style="background: #ff9800; color: white;">⚙ Modelos</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">Procesando...</div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>Cámara</th>
+                    <th>Dirección</th>
+                    <th>Detecciones</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="cameras-list">
+                <!-- Se llenará dinámicamente -->
+            </tbody>
+        </table>
+        
+        <div class="info">
+            <span id="last-update">Actualizado: --:--:--</span>
+        </div>
+    </div>
+    
+    <!-- Modal para configurar detecciones -->
+    <div id="detectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Configurar Detecciones - <span id="modalCameraName"></span></h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div style="padding: 15px 20px; border-bottom: 1px solid #e5e5e5;">
+                <button onclick="selectAllDetections(true)">Marcar Todos</button>
+                <button onclick="selectAllDetections(false)" style="margin-left: 10px;">Desmarcar Todos</button>
+            </div>
+            <div class="modal-body" id="detectionsList">
+                <!-- Se llenará dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()">Cancelar</button>
+                <button class="primary" onclick="saveDetections()">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para añadir nueva cámara -->
+    <div id="addCameraModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Añadir Nueva Cámara</h2>
+                <span class="close" onclick="closeAddCameraModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nombre de la cámara:</label>
+                    <input type="text" id="newCameraName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Dirección IP:</label>
+                    <input type="text" id="newCameraIp" placeholder="192.168.1.xxx" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Puerto HTTP:</label>
+                    <input type="number" id="newCameraPort" placeholder="Se asignará automáticamente" disabled style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Usuario:</label>
+                    <input type="text" id="newCameraUsername" placeholder="admin" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Contraseña:</label>
+                    <input type="password" id="newCameraPassword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruta RTSP (opcional):</label>
+                    <input type="text" id="newCameraPath" placeholder="/Streaming/Channels/1" value="/Streaming/Channels/1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAddCameraModal()">Cancelar</button>
+                <button class="primary" onclick="addNewCamera()">Añadir Cámara</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar cámara -->
+    <div id="editCameraModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Editar Cámara</h2>
+                <span class="close" onclick="closeEditCameraModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <input type="hidden" id="editCameraId">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nombre de la cámara:</label>
+                    <input type="text" id="editCameraName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Dirección IP:</label>
+                    <input type="text" id="editCameraIp" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Puerto HTTP:</label>
+                    <input type="number" id="editCameraPort" disabled style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Usuario:</label>
+                    <input type="text" id="editCameraUsername" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Contraseña:</label>
+                    <input type="password" id="editCameraPassword" placeholder="Dejar vacío para mantener la actual" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruta RTSP:</label>
+                    <input type="text" id="editCameraPath" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Modelo de Detección:</label>
+                    <select id="editCameraModel" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <!-- Se llenará dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeEditCameraModal()">Cancelar</button>
+                <button class="primary" onclick="updateCamera()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para gestionar modelos -->
+    <div id="modelsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>Gestión de Modelos</h2>
+                <span class="close" onclick="closeModelsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <button class="primary" onclick="openAddModelModal()">+ Añadir Modelo Personalizado</button>
+                </div>
+                <h3 style="margin-bottom: 15px;">Modelos Disponibles</h3>
+                <div id="modelsList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModelsModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para añadir modelo personalizado -->
+    <div id="addModelModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Añadir Modelo Personalizado</h2>
+                <span class="close" onclick="closeAddModelModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nombre del modelo:</label>
+                    <input type="text" id="newModelName" placeholder="Ej: YOLOv4 Personas" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Descripción:</label>
+                    <textarea id="newModelDescription" placeholder="Ej: Modelo entrenado para detectar solo personas" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de configuración (.cfg): <span style="color: red;">*</span></label>
+                    <input type="file" id="newModelConfigFile" accept=".cfg" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="configFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de pesos (.weights): <span style="color: red;">*</span></label>
+                    <input type="file" id="newModelWeightsFile" accept=".weights" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="weightsFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de nombres (.names) <span style="font-size: 12px; color: #666;">(opcional)</span>:</label>
+                    <input type="file" id="newModelNamesFile" accept=".names" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="namesFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;">Si no se proporciona, se usará cfg/coco.names</div>
+                </div>
+                <div style="margin-bottom: 20px; display: none;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Número de clases:</label>
+                    <input type="number" id="newModelClasses" placeholder="Se calculará automáticamente" value="" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div style="margin-top: 5px; font-size: 12px; color: #666;">Se detectará automáticamente del archivo .names</div>
+                </div>
+                <div id="uploadProgress" style="display: none; margin-bottom: 20px;">
+                    <div style="background: #e3f2fd; border-radius: 4px; height: 20px; overflow: hidden;">
+                        <div id="progressBar" style="background: #2196f3; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="progressText" style="text-align: center; margin-top: 5px; font-size: 14px;">Subiendo archivos...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAddModelModal()">Cancelar</button>
+                <button class="primary" onclick="addNewModel()">Añadir Modelo</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar modelo personalizado -->
+    <div id="editModelModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Editar Modelo Personalizado</h2>
+                <span class="close" onclick="closeEditModelModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <input type="hidden" id="editModelId">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nombre del modelo:</label>
+                    <input type="text" id="editModelName" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Descripción:</label>
+                    <textarea id="editModelDescription" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de configuración (.cfg) <span style="font-size: 12px; color: #666;">(dejar vacío para mantener el actual)</span>:</label>
+                    <input type="file" id="editModelConfigFile" accept=".cfg" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="editConfigFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de pesos (.weights) <span style="font-size: 12px; color: #666;">(dejar vacío para mantener el actual)</span>:</label>
+                    <input type="file" id="editModelWeightsFile" accept=".weights" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="editWeightsFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Archivo de nombres (.names) <span style="font-size: 12px; color: #666;">(dejar vacío para mantener el actual)</span>:</label>
+                    <input type="file" id="editModelNamesFile" accept=".names" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div id="editNamesFileInfo" style="margin-top: 5px; font-size: 12px; color: #666;"></div>
+                </div>
+                <div id="editUploadProgress" style="display: none; margin-bottom: 20px;">
+                    <div style="background: #e3f2fd; border-radius: 4px; height: 20px; overflow: hidden;">
+                        <div id="editProgressBar" style="background: #2196f3; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="editProgressText" style="text-align: center; margin-top: 5px; font-size: 14px;">Actualizando archivos...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeEditModelModal()">Cancelar</button>
+                <button class="primary" onclick="updateModel()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para configuración avanzada de cámara -->
+    <div id="advancedSettingsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Configuración Avanzada - <span id="advancedCameraName"></span></h2>
+                <span class="close" onclick="closeAdvancedSettings()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <input type="hidden" id="advancedCameraId">
+                
+                <h3 style="margin-bottom: 15px;">Calidad de Video</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Modo de Calidad:</label>
+                    <select id="qualityMode" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onchange="updateQualityWarning()">
+                        <option value="low">Baja - Máximo rendimiento (480p, 60% JPEG)</option>
+                        <option value="medium" selected>Media - Balanceado (720p, 75% JPEG)</option>
+                        <option value="high">Alta - Mayor calidad (1080p, 85% JPEG)</option>
+                        <option value="ultra">Ultra - Máxima calidad (Original, 95% JPEG)</option>
+                    </select>
+                    <div id="qualityWarning" style="margin-top: 5px; font-size: 12px; color: #ff9800; display: none;">
+                        ⚠ Mayor calidad puede causar retraso en el stream
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 15px;">Detección de Objetos</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" id="detectionEnabled" style="margin-right: 10px;" onchange="toggleDetectionOptions()">
+                        <span style="font-weight: 500;">Activar detección de objetos</span>
+                    </label>
+                    <div id="detectionOptions" style="margin-left: 20px;">
+                        <label style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <input type="checkbox" id="showBoundingBoxes" style="margin-right: 10px;">
+                            Mostrar recuadros de detección
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <input type="checkbox" id="showLabels" style="margin-right: 10px;">
+                            Mostrar etiquetas
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <input type="checkbox" id="showConfidence" style="margin-right: 10px;">
+                            Mostrar porcentaje de confianza
+                        </label>
+                        <div style="margin-top: 10px;">
+                            <label style="display: block; margin-bottom: 5px;">Confianza mínima:</label>
+                            <input type="range" id="minConfidence" min="0" max="100" value="50" style="width: 100%;" oninput="updateConfidenceLabel()">
+                            <span id="confidenceLabel" style="font-size: 12px;">50%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 15px;">Opciones de Stream</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Modo de visualización:</label>
+                    <select id="streamMode" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="normal">Normal - Con detección en tiempo real</option>
+                        <option value="streamOnly">Solo Stream - Sin procesamiento (máximo FPS)</option>
+                    </select>
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                    <p style="font-size: 13px; margin: 0; color: #666;">
+                        <strong>Nota:</strong> Los cambios se aplicarán al reiniciar el stream de la cámara.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAdvancedSettings()">Cancelar</button>
+                <button class="primary" onclick="saveAdvancedSettings()">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cameras = [];
+        let currentCameraId = null;
+        let availableModels = [];
+        let currentModelDetections = null;
+        const API_URL = window.location.origin + '/api';
+        
+        // Lista de detecciones por defecto de COCO
+        const defaultDetections = [
+            'person', 'bicycle', 'car', 'motorbike', 'aeroplane', 'bus', 'train', 'truck', 
+            'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 
+            'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 
+            'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 
+            'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 
+            'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 
+            'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 
+            'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'sofa', 
+            'pottedplant', 'bed', 'diningtable', 'toilet', 'tvmonitor', 'laptop', 'mouse', 
+            'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 
+            'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 
+            'toothbrush'
+        ];
+        
+        // Cargar configuración de detecciones del localStorage
+        function loadDetectionConfig() {
+            const config = localStorage.getItem('detectionConfig');
+            return config ? JSON.parse(config) : {};
+        }
+        
+        // Guardar configuración de detecciones
+        function saveDetectionConfig(config) {
+            localStorage.setItem('detectionConfig', JSON.stringify(config));
+        }
+        
+        // Mostrar/ocultar loading
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+        
+        // Obtener estado de las cámaras desde la API
+        async function fetchCameras() {
+            try {
+                const response = await fetch(`${API_URL}/cameras`);
+                cameras = await response.json();
+                return cameras;
+            } catch (error) {
+                console.error('Error obteniendo cámaras:', error);
+                return [];
+            }
+        }
+        
+        // Obtener modelos disponibles desde la API
+        async function fetchModels() {
+            try {
+                const response = await fetch(`${API_URL}/models`);
+                const data = await response.json();
+                availableModels = data.models || [];
+                return availableModels;
+            } catch (error) {
+                console.error('Error obteniendo modelos:', error);
+                return [];
+            }
+        }
+        
+        // Iniciar todas las cámaras
+        async function startAllCameras() {
+            showLoading(true);
+            try {
+                await fetch(`${API_URL}/cameras/start-all`, { method: 'POST' });
+                setTimeout(refreshStatus, 2000);
+            } catch (error) {
+                alert('Error iniciando cámaras: ' + error.message);
+            }
+            showLoading(false);
+        }
+        
+        // Detener todas las cámaras
+        async function stopAllCameras() {
+            showLoading(true);
+            try {
+                await fetch(`${API_URL}/cameras/stop-all`, { method: 'POST' });
+                setTimeout(refreshStatus, 1000);
+            } catch (error) {
+                alert('Error deteniendo cámaras: ' + error.message);
+            }
+            showLoading(false);
+        }
+        
+        // Iniciar una cámara específica
+        async function startCamera(id) {
+            showLoading(true);
+            try {
+                await fetch(`${API_URL}/cameras/${id}/start`, { method: 'POST' });
+                setTimeout(refreshStatus, 2000);
+            } catch (error) {
+                alert('Error iniciando cámara: ' + error.message);
+            }
+            showLoading(false);
+        }
+        
+        // Ver stream (iniciando si es necesario)
+        async function viewStream(cameraId) {
+            const camera = cameras.find(c => c.id === cameraId);
+            if (!camera) return;
+            
+            // Verificar conectividad solo si la ruta está disponible
+            showLoading(true);
+            
+            try {
+                let skipConnectivityCheck = false;
+                try {
+                    document.getElementById('loading').textContent = 'Verificando conectividad...';
+                    const checkResponse = await fetch(`${API_URL}/cameras/${cameraId}/check`);
+                    
+                    if (!checkResponse.ok) {
+                        // Si la ruta no existe, continuar sin verificación
+                        console.log('Verificación de conectividad no disponible, continuando...');
+                        skipConnectivityCheck = true;
+                    } else {
+                        const checkResult = await checkResponse.json();
+                        if (!checkResult.reachable) {
+                            alert(`La cámara ${camera.name} no está accesible en ${camera.ip}`);
+                            showLoading(false);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    // Si hay error, continuar sin verificación
+                    console.log('Error verificando conectividad:', error);
+                    skipConnectivityCheck = true;
+                }
+                
+                if (!camera.running) {
+                    document.getElementById('loading').textContent = 'Iniciando cámara...';
+                    await startCamera(camera.id);
+                    document.getElementById('loading').textContent = 'Esperando stream...';
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+                
+                showLoading(false);
+                document.getElementById('loading').textContent = 'Procesando...';
+                
+                // Abrir en nueva ventana con el visor mejorado
+                const win = window.open(`/src/frontend/stream_viewer.html?port=${camera.port}&name=${encodeURIComponent(camera.name)}`, '_blank');
+                
+                if (!win) {
+                    // Si el navegador bloqueó la ventana emergente
+                    alert('El navegador bloqueó la ventana emergente. Por favor, permite las ventanas emergentes para este sitio.');
+                    // Intentar abrir en la misma ventana
+                    window.location.href = `/src/frontend/stream_viewer.html?port=${camera.port}&name=${encodeURIComponent(camera.name)}`;
+                }
+            } catch (error) {
+                alert('Error al verificar la cámara: ' + error.message);
+                showLoading(false);
+            }
+        }
+        
+        // Renderizar tabla de cámaras
+        async function renderCameras() {
+            const tbody = document.getElementById('cameras-list');
+            tbody.innerHTML = '';
+            
+            for (const camera of cameras) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="status ${camera.running ? 'online' : 'offline'}"></span>
+                        ${camera.running ? 'Activo' : 'Inactivo'}
+                    </td>
+                    <td class="camera-name">${camera.name}</td>
+                    <td>${camera.ip}</td>
+                    <td>
+                        <button class="detection-btn" onclick="openDetectionModal(${camera.id})">
+                            Configurar
+                        </button>
+                    </td>
+                    <td class="actions">
+                        <button class="action-btn" onclick="viewStream(${camera.id})">
+                            Ver Stream
+                        </button>
+                        <button class="action-btn" onclick="openAdvancedSettings(${camera.id})" style="color: #2196f3;">
+                            ⚙ Avanzado
+                        </button>
+                        <button class="action-btn" onclick="editCamera(${camera.id})" style="color: #ff9800;">
+                            Editar
+                        </button>
+                        <button class="action-btn" onclick="deleteCamera(${camera.id})" style="color: #f44336;">
+                            Borrar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Actualizar timestamp
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                `Actualizado: ${now.toLocaleTimeString()}`;
+        }
+        
+        // Actualizar estado
+        async function refreshStatus() {
+            await fetchCameras();
+            await renderCameras();
+        }
+        
+        // Abrir modal de configuración de detecciones
+        async function openDetectionModal(cameraId) {
+            currentCameraId = cameraId;
+            const camera = cameras.find(c => c.id === cameraId);
+            
+            // Obtener configuración del servidor primero
+            let config = {};
+            try {
+                const response = await fetch(`${API_URL}/cameras/${cameraId}/detection-config`);
+                if (response.ok) {
+                    config = await response.json();
+                }
+            } catch (error) {
+                console.error('Error obteniendo configuración del servidor:', error);
+                // Usar configuración local como fallback
+                config = loadDetectionConfig()[cameraId] || {};
+            }
+            
+            document.getElementById('modalCameraName').textContent = camera.name;
+            
+            const detectionsList = document.getElementById('detectionsList');
+            detectionsList.innerHTML = '<div style="text-align: center; padding: 20px;">Cargando detecciones...</div>';
+            
+            // Determinar qué modelo usa la cámara
+            const modelId = camera.modelId || 'yolov4-tiny';
+            
+            try {
+                // Obtener los nombres del modelo específico
+                const response = await fetch(`${API_URL}/models/${modelId}/names`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar nombres del modelo');
+                }
+                
+                const data = await response.json();
+                const modelNames = data.names;
+                
+                // Limpiar y renderizar las detecciones
+                detectionsList.innerHTML = '';
+                
+                modelNames.forEach((detection, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'detection-item';
+                    
+                    // Compatibilidad con ambos formatos: enabledClasses (nuevo) y enabled (antiguo)
+                    let isEnabled = true; // Por defecto habilitado
+                    if (config.enabledClasses !== undefined) {
+                        // Formato nuevo (array)
+                        isEnabled = config.enabledClasses[index] !== false;
+                    } else if (config.enabled !== undefined) {
+                        // Formato antiguo (objeto)
+                        isEnabled = config.enabled[index] !== false;
+                    }
+                    
+                    item.innerHTML = `
+                        <input type="checkbox" id="detection-${index}" ${isEnabled ? 'checked' : ''}>
+                        <label for="detection-${index}">${detection}</label>
+                    `;
+                    
+                    detectionsList.appendChild(item);
+                });
+                
+                // Actualizar la variable global con los nombres correctos
+                window.currentModelDetections = modelNames;
+                
+                // Cargar configuración de checkboxes desde el servidor
+                document.getElementById('detectionEnabled').checked = config.detectionEnabled || config.enabled || false;
+                document.getElementById('showBoundingBoxes').checked = config.showBoundingBoxes !== false;
+                document.getElementById('showLabels').checked = config.showLabels !== false;
+                document.getElementById('showConfidence').checked = config.showConfidence !== false;
+                document.getElementById('minConfidence').value = (config.minConfidence || 0.5) * 100;
+                document.getElementById('confidenceValue').textContent = Math.round((config.minConfidence || 0.5) * 100) + '%';
+                
+                toggleDetectionOptions(); // Actualizar UI según el estado
+                
+            } catch (error) {
+                console.error('Error cargando nombres del modelo:', error);
+                // Fallback a los nombres por defecto de COCO
+                detectionsList.innerHTML = '';
+                defaultDetections.forEach((detection, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'detection-item';
+                    
+                    // Compatibilidad con ambos formatos
+                    let isEnabled = true;
+                    if (config.enabledClasses !== undefined) {
+                        isEnabled = config.enabledClasses[index] !== false;
+                    } else if (config.enabled !== undefined) {
+                        isEnabled = config.enabled[index] !== false;
+                    }
+                    
+                    item.innerHTML = `
+                        <input type="checkbox" id="detection-${index}" ${isEnabled ? 'checked' : ''}>
+                        <label for="detection-${index}">${detection}</label>
+                    `;
+                    
+                    detectionsList.appendChild(item);
+                });
+                window.currentModelDetections = defaultDetections;
+            }
+            
+            document.getElementById('detectionModal').style.display = 'block';
+        }
+        
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('detectionModal').style.display = 'none';
+            currentCameraId = null;
+        }
+        
+        // Guardar configuración de detecciones
+        function saveDetections() {
+            if (!currentCameraId) return;
+            
+            const config = loadDetectionConfig();
+            const cameraConfig = {
+                detectionEnabled: document.getElementById('detectionEnabled').checked,
+                enabled: {}, // Mantener por compatibilidad
+                enabledClasses: [], // Nuevo formato como array
+                showBoundingBoxes: document.getElementById('showBoundingBoxes').checked,
+                showLabels: document.getElementById('showLabels').checked,
+                showConfidence: document.getElementById('showConfidence').checked,
+                minConfidence: parseFloat(document.getElementById('minConfidence').value) / 100
+            };
+            
+            // Usar los nombres del modelo actual
+            const detections = window.currentModelDetections || defaultDetections;
+            
+            detections.forEach((detection, index) => {
+                const checkbox = document.getElementById(`detection-${index}`);
+                if (checkbox) {
+                    cameraConfig.enabled[index] = checkbox.checked; // Formato antiguo
+                    cameraConfig.enabledClasses[index] = checkbox.checked; // Formato nuevo
+                }
+            });
+            
+            config[currentCameraId] = cameraConfig;
+            saveDetectionConfig(config);
+            
+            // Actualizar configuración en el servidor
+            updateServerDetectionConfig(currentCameraId, cameraConfig);
+            
+            closeModal();
+        }
+        
+        // Actualizar configuración en el servidor
+        async function updateServerDetectionConfig(cameraId, config) {
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/cameras/${cameraId}/detection-config`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                let result;
+                
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    console.error('Invalid JSON response:', text);
+                    throw new Error('Invalid response from server');
+                }
+                
+                if (result.restarted) {
+                    // Si la cámara se reinició, mostrar mensaje y actualizar estado
+                    document.getElementById('loading').textContent = 'Aplicando cambios...';
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await refreshStatus();
+                }
+            } catch (error) {
+                console.error('Error actualizando configuración:', error);
+                alert('Error al actualizar la configuración: ' + error.message);
+            } finally {
+                showLoading(false);
+                document.getElementById('loading').textContent = 'Procesando...';
+            }
+        }
+        
+        // Marcar o desmarcar todas las detecciones
+        function selectAllDetections(checked) {
+            const detections = window.currentModelDetections || defaultDetections;
+            detections.forEach((detection, index) => {
+                const checkbox = document.getElementById(`detection-${index}`);
+                if (checkbox) {
+                    checkbox.checked = checked;
+                }
+            });
+        }
+        
+        // Abrir modal para añadir cámara
+        function openAddCameraModal() {
+            document.getElementById('addCameraModal').style.display = 'block';
+            // Limpiar campos
+            document.getElementById('newCameraName').value = '';
+            document.getElementById('newCameraIp').value = '';
+            document.getElementById('newCameraPort').value = '';
+            document.getElementById('newCameraUsername').value = 'admin';
+            document.getElementById('newCameraPassword').value = '';
+            document.getElementById('newCameraPath').value = '/Streaming/Channels/1';
+        }
+        
+        // Cerrar modal de añadir cámara
+        function closeAddCameraModal() {
+            document.getElementById('addCameraModal').style.display = 'none';
+        }
+        
+        // Añadir nueva cámara
+        async function addNewCamera() {
+            const name = document.getElementById('newCameraName').value.trim();
+            const ip = document.getElementById('newCameraIp').value.trim();
+            const username = document.getElementById('newCameraUsername').value.trim() || 'admin';
+            const password = document.getElementById('newCameraPassword').value;
+            const path = document.getElementById('newCameraPath').value.trim() || '/Streaming/Channels/1';
+            
+            if (!name || !ip || !password) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            const newCamera = {
+                name,
+                ip,
+                rtsp_port: 554,
+                username,
+                password,
+                path
+            };
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/cameras`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newCamera)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al añadir cámara');
+                }
+                
+                closeAddCameraModal();
+                await refreshStatus();
+            } catch (error) {
+                alert('Error al añadir cámara: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Borrar cámara
+        async function deleteCamera(cameraId) {
+            const camera = cameras.find(c => c.id === cameraId);
+            if (!camera) return;
+            
+            if (!confirm(`¿Está seguro de que desea borrar la cámara "${camera.name}"?`)) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/cameras/${cameraId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al borrar cámara');
+                }
+                
+                await refreshStatus();
+            } catch (error) {
+                alert('Error al borrar cámara: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Editar cámara
+        async function editCamera(cameraId) {
+            const camera = cameras.find(c => c.id === cameraId);
+            if (!camera) return;
+            
+            // Cargar modelos si no están cargados
+            if (availableModels.length === 0) {
+                await fetchModels();
+            }
+            
+            document.getElementById('editCameraModal').style.display = 'block';
+            document.getElementById('editCameraId').value = camera.id;
+            document.getElementById('editCameraName').value = camera.name;
+            document.getElementById('editCameraIp').value = camera.ip;
+            document.getElementById('editCameraPort').value = camera.port;
+            document.getElementById('editCameraUsername').value = camera.username;
+            document.getElementById('editCameraPassword').value = ''; // No mostrar contraseña
+            document.getElementById('editCameraPath').value = camera.path;
+            
+            // Llenar el select de modelos
+            const modelSelect = document.getElementById('editCameraModel');
+            modelSelect.innerHTML = '';
+            
+            availableModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                if (model.description) {
+                    option.title = model.description;
+                }
+                modelSelect.appendChild(option);
+            });
+            
+            // Seleccionar el modelo actual
+            if (camera.modelId && availableModels.find(m => m.id === camera.modelId)) {
+                modelSelect.value = camera.modelId;
+            } else {
+                modelSelect.value = 'yolov4-tiny'; // Por defecto
+            }
+        }
+        
+        // Cerrar modal de editar cámara
+        function closeEditCameraModal() {
+            document.getElementById('editCameraModal').style.display = 'none';
+        }
+        
+        // Actualizar cámara
+        async function updateCamera() {
+            const cameraId = parseInt(document.getElementById('editCameraId').value);
+            const name = document.getElementById('editCameraName').value.trim();
+            const ip = document.getElementById('editCameraIp').value.trim();
+            const username = document.getElementById('editCameraUsername').value.trim();
+            const password = document.getElementById('editCameraPassword').value;
+            const path = document.getElementById('editCameraPath').value.trim();
+            const modelId = document.getElementById('editCameraModel').value;
+            
+            if (!name || !ip || !username) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            const updatedCamera = {
+                name,
+                ip,
+                username,
+                path,
+                modelId
+            };
+            
+            // Solo incluir contraseña si se proporcionó una nueva
+            if (password) {
+                updatedCamera.password = password;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/cameras/${cameraId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedCamera)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al actualizar cámara');
+                }
+                
+                closeEditCameraModal();
+                await refreshStatus();
+            } catch (error) {
+                alert('Error al actualizar cámara: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Abrir modal de modelos
+        async function openModelsModal() {
+            await fetchModels();
+            renderModelsList();
+            document.getElementById('modelsModal').style.display = 'block';
+        }
+        
+        // Cerrar modal de modelos
+        function closeModelsModal() {
+            document.getElementById('modelsModal').style.display = 'none';
+        }
+        
+        // Renderizar lista de modelos
+        function renderModelsList() {
+            const modelsList = document.getElementById('modelsList');
+            modelsList.innerHTML = '';
+            
+            availableModels.forEach(model => {
+                const modelItem = document.createElement('div');
+                modelItem.style.cssText = 'padding: 15px; border: 1px solid #e5e5e5; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;';
+                
+                const info = document.createElement('div');
+                info.innerHTML = `
+                    <strong>${model.name}</strong>
+                    ${model.description ? `<br><span style="color: #666; font-size: 13px;">${model.description}</span>` : ''}
+                    <br><span style="color: #999; font-size: 12px;">Config: ${model.config} | Weights: ${model.weights}</span>
+                `;
+                
+                const actions = document.createElement('div');
+                actions.style.cssText = 'display: flex; gap: 8px;';
+                if (model.id.startsWith('custom_')) {
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Editar';
+                    editBtn.style.cssText = 'font-size: 12px; padding: 4px 12px; background: #ff9800; color: white; border: none; border-radius: 4px;';
+                    editBtn.onclick = () => editModel(model.id);
+                    actions.appendChild(editBtn);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.className = 'danger';
+                    deleteBtn.style.cssText = 'font-size: 12px; padding: 4px 12px;';
+                    deleteBtn.onclick = () => deleteModel(model.id);
+                    actions.appendChild(deleteBtn);
+                }
+                
+                modelItem.appendChild(info);
+                modelItem.appendChild(actions);
+                modelsList.appendChild(modelItem);
+            });
+        }
+        
+        // Abrir modal para añadir modelo
+        function openAddModelModal() {
+            document.getElementById('newModelName').value = '';
+            document.getElementById('newModelDescription').value = '';
+            document.getElementById('newModelConfigFile').value = '';
+            document.getElementById('newModelWeightsFile').value = '';
+            document.getElementById('newModelNamesFile').value = '';
+            document.getElementById('newModelClasses').value = '';
+            document.getElementById('configFileInfo').textContent = '';
+            document.getElementById('weightsFileInfo').textContent = '';
+            document.getElementById('namesFileInfo').textContent = 'Si no se proporciona, se usará cfg/coco.names (80 clases)';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('addModelModal').style.display = 'block';
+            
+            // Añadir listeners para mostrar información de archivos
+            document.getElementById('newModelConfigFile').onchange = function(e) {
+                if (e.target.files[0]) {
+                    document.getElementById('configFileInfo').textContent = 
+                        `Archivo: ${e.target.files[0].name} (${formatFileSize(e.target.files[0].size)})`;
+                }
+            };
+            
+            document.getElementById('newModelWeightsFile').onchange = function(e) {
+                if (e.target.files[0]) {
+                    document.getElementById('weightsFileInfo').textContent = 
+                        `Archivo: ${e.target.files[0].name} (${formatFileSize(e.target.files[0].size)})`;
+                }
+            };
+            
+            document.getElementById('newModelNamesFile').onchange = async function(e) {
+                if (e.target.files[0]) {
+                    const file = e.target.files[0];
+                    document.getElementById('namesFileInfo').textContent = 
+                        `Archivo: ${file.name} (${formatFileSize(file.size)}) - Contando clases...`;
+                    
+                    // Leer el archivo para contar las clases
+                    try {
+                        const text = await file.text();
+                        const lines = text.split('\n').filter(line => line.trim() !== '');
+                        document.getElementById('namesFileInfo').textContent = 
+                            `Archivo: ${file.name} (${formatFileSize(file.size)}) - ${lines.length} clases detectadas`;
+                    } catch (err) {
+                        document.getElementById('namesFileInfo').textContent = 
+                            `Archivo: ${file.name} (${formatFileSize(file.size)})`;
+                    }
+                }
+            };
+        }
+        
+        // Función auxiliar para formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Cerrar modal de añadir modelo
+        function closeAddModelModal() {
+            document.getElementById('addModelModal').style.display = 'none';
+        }
+        
+        // Añadir nuevo modelo
+        async function addNewModel() {
+            const name = document.getElementById('newModelName').value.trim();
+            const description = document.getElementById('newModelDescription').value.trim();
+            const configFile = document.getElementById('newModelConfigFile').files[0];
+            const weightsFile = document.getElementById('newModelWeightsFile').files[0];
+            const namesFile = document.getElementById('newModelNamesFile').files[0];
+            
+            if (!name || !configFile || !weightsFile) {
+                alert('Por favor complete todos los campos requeridos y seleccione los archivos .cfg y .weights');
+                return;
+            }
+            
+            // Validar tamaño de archivos
+            if (weightsFile.size > 500 * 1024 * 1024) {
+                alert('El archivo .weights es demasiado grande (máximo 500MB)');
+                return;
+            }
+            
+            // Preparar FormData para subir archivos
+            const formData = new FormData();
+            formData.append('configFile', configFile);
+            formData.append('weightsFile', weightsFile);
+            if (namesFile) {
+                formData.append('namesFile', namesFile);
+            }
+            
+            // Añadir datos del modelo
+            const modelData = {
+                name,
+                description
+            };
+            formData.append('modelData', JSON.stringify(modelData));
+            
+            try {
+                // Mostrar progreso
+                document.getElementById('uploadProgress').style.display = 'block';
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressText').textContent = 'Subiendo archivos...';
+                
+                // Crear XMLHttpRequest para monitorear progreso
+                const xhr = new XMLHttpRequest();
+                
+                // Configurar listener de progreso
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        document.getElementById('progressBar').style.width = percentComplete + '%';
+                        document.getElementById('progressText').textContent = 
+                            `Subiendo... ${Math.round(percentComplete)}% (${formatFileSize(e.loaded)} de ${formatFileSize(e.total)})`;
+                    }
+                });
+                
+                // Promesa para manejar la respuesta
+                const uploadPromise = new Promise((resolve, reject) => {
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status === 200) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            reject(new Error(xhr.responseText || 'Error al subir archivos'));
+                        }
+                    });
+                    
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Error de red al subir archivos'));
+                    });
+                });
+                
+                // Enviar petición
+                xhr.open('POST', `${API_URL}/models/upload`);
+                xhr.send(formData);
+                
+                // Esperar respuesta
+                const result = await uploadPromise;
+                
+                document.getElementById('progressText').textContent = '¡Modelo añadido exitosamente!';
+                setTimeout(() => {
+                    closeAddModelModal();
+                    fetchModels().then(() => renderModelsList());
+                }, 1500);
+                
+            } catch (error) {
+                alert('Error al añadir modelo: ' + error.message);
+                document.getElementById('uploadProgress').style.display = 'none';
+            }
+        }
+        
+        // Eliminar modelo
+        async function deleteModel(modelId) {
+            if (!confirm('¿Está seguro de que desea eliminar este modelo?')) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/models/${modelId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al eliminar modelo');
+                }
+                
+                await fetchModels();
+                renderModelsList();
+            } catch (error) {
+                alert('Error al eliminar modelo: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Editar modelo
+        function editModel(modelId) {
+            const model = availableModels.find(m => m.id === modelId);
+            if (!model) return;
+            
+            document.getElementById('editModelId').value = model.id;
+            document.getElementById('editModelName').value = model.name;
+            document.getElementById('editModelDescription').value = model.description || '';
+            
+            // Mostrar información de archivos actuales
+            document.getElementById('editConfigFileInfo').textContent = `Archivo actual: ${model.config}`;
+            document.getElementById('editWeightsFileInfo').textContent = `Archivo actual: ${model.weights}`;
+            document.getElementById('editNamesFileInfo').textContent = `Archivo actual: ${model.names} (${model.classes} clases)`;
+            
+            // Limpiar inputs de archivo
+            document.getElementById('editModelConfigFile').value = '';
+            document.getElementById('editModelWeightsFile').value = '';
+            document.getElementById('editModelNamesFile').value = '';
+            
+            // Añadir listeners para mostrar información de nuevos archivos
+            document.getElementById('editModelConfigFile').onchange = function(e) {
+                if (e.target.files[0]) {
+                    document.getElementById('editConfigFileInfo').textContent = 
+                        `Nuevo archivo: ${e.target.files[0].name} (${formatFileSize(e.target.files[0].size)})`;
+                }
+            };
+            
+            document.getElementById('editModelWeightsFile').onchange = function(e) {
+                if (e.target.files[0]) {
+                    document.getElementById('editWeightsFileInfo').textContent = 
+                        `Nuevo archivo: ${e.target.files[0].name} (${formatFileSize(e.target.files[0].size)})`;
+                }
+            };
+            
+            document.getElementById('editModelNamesFile').onchange = async function(e) {
+                if (e.target.files[0]) {
+                    const file = e.target.files[0];
+                    document.getElementById('editNamesFileInfo').textContent = 
+                        `Nuevo archivo: ${file.name} (${formatFileSize(file.size)}) - Contando clases...`;
+                    
+                    try {
+                        const text = await file.text();
+                        const lines = text.split('\n').filter(line => line.trim() !== '');
+                        document.getElementById('editNamesFileInfo').textContent = 
+                            `Nuevo archivo: ${file.name} (${formatFileSize(file.size)}) - ${lines.length} clases detectadas`;
+                    } catch (err) {
+                        document.getElementById('editNamesFileInfo').textContent = 
+                            `Nuevo archivo: ${file.name} (${formatFileSize(file.size)})`;
+                    }
+                }
+            };
+            
+            document.getElementById('editUploadProgress').style.display = 'none';
+            document.getElementById('editModelModal').style.display = 'block';
+        }
+        
+        // Cerrar modal de editar modelo
+        function closeEditModelModal() {
+            document.getElementById('editModelModal').style.display = 'none';
+        }
+        
+        // Actualizar modelo
+        async function updateModel() {
+            const modelId = document.getElementById('editModelId').value;
+            const name = document.getElementById('editModelName').value.trim();
+            const description = document.getElementById('editModelDescription').value.trim();
+            const configFile = document.getElementById('editModelConfigFile').files[0];
+            const weightsFile = document.getElementById('editModelWeightsFile').files[0];
+            const namesFile = document.getElementById('editModelNamesFile').files[0];
+            
+            if (!name) {
+                alert('Por favor proporcione un nombre para el modelo');
+                return;
+            }
+            
+            // Preparar FormData
+            const formData = new FormData();
+            
+            // Añadir archivos solo si se seleccionaron nuevos
+            if (configFile) {
+                formData.append('configFile', configFile);
+            }
+            if (weightsFile) {
+                formData.append('weightsFile', weightsFile);
+            }
+            if (namesFile) {
+                formData.append('namesFile', namesFile);
+            }
+            
+            // Añadir datos del modelo
+            const modelData = {
+                name,
+                description
+            };
+            formData.append('modelData', JSON.stringify(modelData));
+            
+            try {
+                // Mostrar progreso
+                document.getElementById('editUploadProgress').style.display = 'block';
+                document.getElementById('editProgressBar').style.width = '0%';
+                document.getElementById('editProgressText').textContent = 'Actualizando modelo...';
+                
+                // Crear XMLHttpRequest para monitorear progreso
+                const xhr = new XMLHttpRequest();
+                
+                // Configurar listener de progreso
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        document.getElementById('editProgressBar').style.width = percentComplete + '%';
+                        document.getElementById('editProgressText').textContent = 
+                            `Actualizando... ${Math.round(percentComplete)}%`;
+                    }
+                });
+                
+                // Promesa para manejar la respuesta
+                const uploadPromise = new Promise((resolve, reject) => {
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status === 200) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            reject(new Error(xhr.responseText || 'Error al actualizar modelo'));
+                        }
+                    });
+                    
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Error de red al actualizar modelo'));
+                    });
+                });
+                
+                // Enviar petición
+                xhr.open('PUT', `${API_URL}/models/${modelId}`);
+                xhr.send(formData);
+                
+                // Esperar respuesta
+                const result = await uploadPromise;
+                
+                document.getElementById('editProgressText').textContent = '¡Modelo actualizado exitosamente!';
+                setTimeout(() => {
+                    closeEditModelModal();
+                    fetchModels().then(() => renderModelsList());
+                }, 1500);
+                
+            } catch (error) {
+                alert('Error al actualizar modelo: ' + error.message);
+                document.getElementById('editUploadProgress').style.display = 'none';
+            }
+        }
+        
+        // Abrir modal de configuración avanzada
+        async function openAdvancedSettings(cameraId) {
+            const camera = cameras.find(c => c.id === cameraId);
+            if (!camera) return;
+            
+            document.getElementById('advancedCameraId').value = camera.id;
+            document.getElementById('advancedCameraName').textContent = camera.name;
+            
+            // Cargar configuración actual
+            const settings = camera.settings || {
+                quality: 'medium',
+                resolution: '720p',
+                jpegQuality: 75,
+                detectionEnabled: true,
+                showBoundingBoxes: true,
+                showLabels: true,
+                showConfidence: true,
+                minConfidence: 0.5
+            };
+            
+            document.getElementById('qualityMode').value = settings.quality || 'medium';
+            document.getElementById('detectionEnabled').checked = settings.detectionEnabled !== false;
+            document.getElementById('showBoundingBoxes').checked = settings.showBoundingBoxes !== false;
+            document.getElementById('showLabels').checked = settings.showLabels !== false;
+            document.getElementById('showConfidence').checked = settings.showConfidence !== false;
+            document.getElementById('minConfidence').value = (settings.minConfidence || 0.5) * 100;
+            document.getElementById('streamMode').value = settings.detectionEnabled === false ? 'streamOnly' : 'normal';
+            
+            updateQualityWarning();
+            toggleDetectionOptions();
+            updateConfidenceLabel();
+            
+            document.getElementById('advancedSettingsModal').style.display = 'block';
+        }
+        
+        // Cerrar modal de configuración avanzada
+        function closeAdvancedSettings() {
+            document.getElementById('advancedSettingsModal').style.display = 'none';
+        }
+        
+        // Actualizar advertencia de calidad
+        function updateQualityWarning() {
+            const quality = document.getElementById('qualityMode').value;
+            const warning = document.getElementById('qualityWarning');
+            
+            if (quality === 'high' || quality === 'ultra') {
+                warning.style.display = 'block';
+                if (quality === 'ultra') {
+                    warning.innerHTML = '<strong>⚠️ Advertencia:</strong><br>' +
+                        '• Uso muy intensivo de ancho de banda<br>' +
+                        '• Posible congelamiento con resoluciones altas<br>' +
+                        '• Se recomienda solo para redes locales rápidas<br>' +
+                        '• La resolución se limitará a 1440p máximo<br>' +
+                        '• Se reducirá el framerate para mantener estabilidad';
+                    warning.style.color = '#f44336';
+                    warning.style.backgroundColor = '#ffebee';
+                    warning.style.padding = '10px';
+                    warning.style.borderRadius = '4px';
+                    warning.style.border = '1px solid #ffcdd2';
+                } else {
+                    warning.innerHTML = '<strong>⚠️ Advertencia:</strong><br>' +
+                        '• Aumentará el uso de ancho de banda<br>' +
+                        '• La resolución se limitará a 1080p máximo';
+                    warning.style.color = '#ff9800';
+                    warning.style.backgroundColor = '#fff3e0';
+                    warning.style.padding = '10px';
+                    warning.style.borderRadius = '4px';
+                    warning.style.border = '1px solid #ffe0b2';
+                }
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+        
+        // Toggle opciones de detección
+        function toggleDetectionOptions() {
+            const enabled = document.getElementById('detectionEnabled').checked;
+            const options = document.getElementById('detectionOptions');
+            options.style.opacity = enabled ? '1' : '0.5';
+            options.style.pointerEvents = enabled ? 'auto' : 'none';
+            
+            // Actualizar modo de stream
+            if (!enabled) {
+                document.getElementById('streamMode').value = 'streamOnly';
+            } else {
+                document.getElementById('streamMode').value = 'normal';
+            }
+        }
+        
+        // Actualizar etiqueta de confianza
+        function updateConfidenceLabel() {
+            const value = document.getElementById('minConfidence').value;
+            document.getElementById('confidenceLabel').textContent = value + '%';
+        }
+        
+        // Guardar configuración avanzada
+        async function saveAdvancedSettings() {
+            const cameraId = parseInt(document.getElementById('advancedCameraId').value);
+            const quality = document.getElementById('qualityMode').value;
+            const detectionEnabled = document.getElementById('detectionEnabled').checked;
+            const streamMode = document.getElementById('streamMode').value;
+            
+            // Mapear calidad a resolución y JPEG quality
+            const qualitySettings = {
+                low: { resolution: '480p', jpegQuality: 60 },
+                medium: { resolution: '720p', jpegQuality: 75 },
+                high: { resolution: '1080p', jpegQuality: 85 },
+                ultra: { resolution: 'original', jpegQuality: 95 }
+            };
+            
+            const settings = {
+                quality,
+                ...qualitySettings[quality],
+                detectionEnabled: detectionEnabled && streamMode === 'normal',
+                showBoundingBoxes: document.getElementById('showBoundingBoxes').checked,
+                showLabels: document.getElementById('showLabels').checked,
+                showConfidence: document.getElementById('showConfidence').checked,
+                minConfidence: parseFloat(document.getElementById('minConfidence').value) / 100
+            };
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_URL}/cameras/${cameraId}/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al guardar configuración');
+                }
+                
+                // Si la cámara está activa, preguntar si reiniciar
+                const camera = cameras.find(c => c.id === cameraId);
+                if (camera && camera.running) {
+                    if (confirm('La cámara está activa. ¿Desea reiniciarla para aplicar los cambios?')) {
+                        await fetch(`${API_URL}/cameras/${cameraId}/restart`, { method: 'POST' });
+                    }
+                }
+                
+                closeAdvancedSettings();
+                await refreshStatus();
+            } catch (error) {
+                alert('Error al guardar configuración: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const detectionModal = document.getElementById('detectionModal');
+            const addCameraModal = document.getElementById('addCameraModal');
+            const editCameraModal = document.getElementById('editCameraModal');
+            const modelsModal = document.getElementById('modelsModal');
+            const addModelModal = document.getElementById('addModelModal');
+            const editModelModal = document.getElementById('editModelModal');
+            const advancedSettingsModal = document.getElementById('advancedSettingsModal');
+            
+            if (event.target === detectionModal) {
+                closeModal();
+            } else if (event.target === addCameraModal) {
+                closeAddCameraModal();
+            } else if (event.target === editCameraModal) {
+                closeEditCameraModal();
+            } else if (event.target === modelsModal) {
+                closeModelsModal();
+            } else if (event.target === addModelModal) {
+                closeAddModelModal();
+            } else if (event.target === editModelModal) {
+                closeEditModelModal();
+            } else if (event.target === advancedSettingsModal) {
+                closeAdvancedSettings();
+            }
+        }
+        
+        // Inicializar
+        refreshStatus();
+        
+        // Auto-actualizar cada 10 segundos
+        setInterval(refreshStatus, 10000);
+    </script>
+</body>
+</html>

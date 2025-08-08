@@ -1,0 +1,27 @@
+# Configuración del Sistema de Detección YOLO
+# ============================================
+
+# Puerto del servidor web
+SERVER_PORT=3000
+
+# Rango de puertos para cámaras
+CAMERA_PORT_START=8080
+CAMERA_PORT_END=8099
+
+# Rutas
+DARKNET_DIR="darknet"
+WEIGHTS_FILE="yolov4-tiny.weights"
+CONFIG_FILE="cfg/yolov4-tiny.cfg"
+NAMES_FILE="cfg/coco.names"
+
+# Opciones de inicio
+AUTO_OPEN_BROWSER=true
+AUTO_START_CAMERAS=true
+VERBOSE_LOGS=false
+
+# Límites
+MAX_CAMERAS=20
+MAX_FPS=30
+
+# GPU (dejar vacío para auto-detectar)
+CUDA_DEVICE=0

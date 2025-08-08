@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream - Cargando...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 16px;
+            font-weight: normal;
+            margin: 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .controls button {
+            padding: 6px 12px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .controls button:hover {
+            background: #444;
+        }
+        
+        .controls button.active {
+            background: #2196f3;
+            border-color: #2196f3;
+        }
+        
+        .video-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #000;
+        }
+        
+        #streamImage {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+        
+        /* Mantener proporciones específicas */
+        .aspect-16-9 #streamImage {
+            aspect-ratio: 16/9;
+        }
+        
+        .aspect-4-3 #streamImage {
+            aspect-ratio: 4/3;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .loading.hidden {
+            display: none;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196f3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .stats.hidden {
+            display: none;
+        }
+        
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            transition: background 0.2s;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(33, 150, 243, 1);
+        }
+        
+        /* Modo pantalla completa - mantiene la misma resolución, solo quita bordes */
+        body.fullscreen .header {
+            display: none;
+        }
+        
+        body.fullscreen .video-container {
+            height: 100vh;
+        }
+        
+        body.fullscreen #streamImage {
+            /* Pantalla completa ocupa todo */
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        body.fullscreen .fullscreen-btn {
+            content: 'Salir pantalla completa';
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="cameraName">Cargando...</h1>
+        <div class="controls">
+            <button onclick="toggleAspect()">Cambiar Proporción</button>
+            <button onclick="toggleStats()">Estadísticas</button>
+            <button onclick="window.close()">Cerrar</button>
+        </div>
+    </div>
+    
+    <div class="video-container" id="videoContainer">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Conectando con la cámara...</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">
+                Si tarda demasiado, verifica la conexión
+            </p>
+        </div>
+        
+        <img id="streamImage" style="display: none;" />
+        
+        <div class="stats hidden" id="stats">
+            <div>FPS: <span id="fps">0</span></div>
+            <div>Resolución: <span id="resolution">-</span></div>
+            <div>Frames: <span id="frameCount">0</span></div>
+        </div>
+    </div>
+    
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">
+        <span id="fullscreenText">Pantalla completa</span>
+    </button>
+    
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const port = urlParams.get('port') || '8080';
+        const cameraName = urlParams.get('name') || 'Cámara';
+        const aspectRatio = urlParams.get('aspect') || 'auto';
+        
+        // Configurar título y nombre
+        document.title = `Stream - ${cameraName}`;
+        document.getElementById('cameraName').textContent = cameraName;
+        
+        // Variables para estadísticas
+        let frameCount = 0;
+        let lastFrameTime = Date.now();
+        let fps = 0;
+        let statsInterval;
+        let currentAspect = aspectRatio;
+        
+        // Elemento de imagen
+        const img = document.getElementById('streamImage');
+        const loading = document.getElementById('loading');
+        const videoContainer = document.getElementById('videoContainer');
+        
+        // Configurar stream
+        function startStream() {
+            // Usar la misma IP/hostname desde la que se accede
+            const streamHost = window.location.hostname;
+            img.src = `http://${streamHost}:${port}/`;
+            
+            img.onload = function() {
+                // Ocultar loading al cargar primera imagen
+                if (loading.classList.contains('hidden') === false) {
+                    loading.classList.add('hidden');
+                    img.style.display = 'block';
+                    
+                    // Detectar proporción inicial
+                    detectAspectRatio();
+                    
+                    // Iniciar contador de estadísticas
+                    startStats();
+                }
+                
+                // Actualizar contador de frames
+                frameCount++;
+                
+                // Calcular FPS
+                const now = Date.now();
+                const delta = now - lastFrameTime;
+                if (delta > 0) {
+                    fps = Math.round(1000 / delta);
+                }
+                lastFrameTime = now;
+            };
+            
+            img.onerror = function() {
+                console.error('Error cargando stream');
+                // Reintentar en 2 segundos
+                setTimeout(startStream, 2000);
+            };
+        }
+        
+        // Detectar proporción de aspecto
+        function detectAspectRatio() {
+            if (currentAspect === 'auto' && img.naturalWidth && img.naturalHeight) {
+                const ratio = img.naturalWidth / img.naturalHeight;
+                
+                // Detectar si es más cercano a 16:9 o 4:3
+                const diff16_9 = Math.abs(ratio - (16/9));
+                const diff4_3 = Math.abs(ratio - (4/3));
+                
+                if (diff16_9 < diff4_3) {
+                    videoContainer.className = 'video-container aspect-16-9';
+                    currentAspect = '16:9';
+                } else {
+                    videoContainer.className = 'video-container aspect-4-3';
+                    currentAspect = '4:3';
+                }
+                
+                // Actualizar resolución en estadísticas
+                document.getElementById('resolution').textContent = 
+                    `${img.naturalWidth}x${img.naturalHeight} (${currentAspect})`;
+            }
+        }
+        
+        // Cambiar proporción manualmente
+        function toggleAspect() {
+            if (currentAspect === '16:9') {
+                videoContainer.className = 'video-container aspect-4-3';
+                currentAspect = '4:3';
+            } else if (currentAspect === '4:3') {
+                videoContainer.className = 'video-container';
+                currentAspect = 'auto';
+            } else {
+                videoContainer.className = 'video-container aspect-16-9';
+                currentAspect = '16:9';
+            }
+            
+            // Actualizar resolución
+            if (img.naturalWidth && img.naturalHeight) {
+                document.getElementById('resolution').textContent = 
+                    `${img.naturalWidth}x${img.naturalHeight} (${currentAspect})`;
+            }
+        }
+        
+        // Mostrar/ocultar estadísticas
+        function toggleStats() {
+            const stats = document.getElementById('stats');
+            stats.classList.toggle('hidden');
+        }
+        
+        // Actualizar estadísticas
+        function updateStats() {
+            document.getElementById('fps').textContent = fps;
+            document.getElementById('frameCount').textContent = frameCount;
+        }
+        
+        // Iniciar estadísticas
+        function startStats() {
+            statsInterval = setInterval(updateStats, 100);
+        }
+        
+        // Pantalla completa
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    document.body.classList.add('fullscreen');
+                    document.getElementById('fullscreenText').textContent = 'Salir pantalla completa';
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    document.body.classList.remove('fullscreen');
+                    document.getElementById('fullscreenText').textContent = 'Pantalla completa';
+                });
+            }
+        }
+        
+        // Manejar ESC en pantalla completa
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('fullscreen');
+                document.getElementById('fullscreenText').textContent = 'Pantalla completa';
+            }
+        });
+        
+        // Atajos de teclado
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 's':
+                case 'S':
+                    toggleStats();
+                    break;
+                case 'a':
+                case 'A':
+                    toggleAspect();
+                    break;
+                case 'Escape':
+                    if (document.fullscreenElement) {
+                        toggleFullscreen();
+                    }
+                    break;
+            }
+        });
+        
+        // Iniciar stream
+        startStream();
+    </script>
+</body>
+</html>
