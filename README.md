@@ -1,5 +1,7 @@
 # Sistema de Detección Multi-Cámara con YOLO
 
+[🇬🇧 English Version](README.en.md)
+
 Sistema completo de detección de objetos en tiempo real con soporte para múltiples cámaras RTSP usando YOLOv4-tiny y Darknet.
 
 ## Características
