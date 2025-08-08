@@ -116,11 +116,16 @@ install_python_deps() {
 
 # Compilar Darknet
 compile_darknet() {
-    print_message "Compilando Darknet..."
+    print_message "Preparando Darknet..."
     
+    # Si darknet no existe, descargarlo
     if [ ! -d "darknet" ]; then
-        print_error "Directorio darknet no encontrado"
-        exit 1
+        print_message "Darknet no encontrado. Descargando desde GitHub..."
+        git clone https://github.com/hank-ai/darknet.git darknet
+        if [ $? -ne 0 ]; then
+            print_error "Error al descargar Darknet"
+            exit 1
+        fi
     fi
     
     cd darknet
@@ -147,6 +152,15 @@ compile_darknet() {
     
     cd ../..
     print_message "Darknet compilado exitosamente"
+    
+    # Aplicar personalizaciones si existen
+    if [ -d "darknet-custom" ] && [ -f "darknet-custom/install.sh" ]; then
+        print_message "Aplicando personalizaciones de Darknet..."
+        cd darknet-custom
+        chmod +x install.sh
+        ./install.sh
+        cd ..
+    fi
 }
 
 # Verificar modelo YOLO
@@ -277,14 +291,6 @@ main() {
     
     # Verificar instalación
     verify_installation
-    
-    # Instalar personalizaciones si existen
-    if [ -d "darknet-custom" ]; then
-        print_message "Instalando personalizaciones de Darknet..."
-        cd darknet-custom
-        ./install.sh
-        cd ..
-    fi
     
     echo
     echo "========================================"
