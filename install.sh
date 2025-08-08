@@ -121,11 +121,21 @@ compile_darknet() {
     # Si darknet no existe, descargarlo
     if [ ! -d "darknet" ]; then
         print_message "Darknet no encontrado. Descargando desde GitHub..."
-        git clone https://github.com/hank-ai/darknet.git darknet
+        print_message "Repositorio: $DARKNET_REPO"
+        
+        git clone $DARKNET_REPO darknet
         if [ $? -ne 0 ]; then
             print_error "Error al descargar Darknet"
             exit 1
         fi
+        
+        cd darknet
+        print_message "Usando versión de Darknet: $DARKNET_VERSION"
+        git checkout $DARKNET_VERSION
+        if [ $? -ne 0 ]; then
+            print_warning "No se pudo cambiar a la versión $DARKNET_VERSION, usando master"
+        fi
+        cd ..
     fi
     
     cd darknet
@@ -141,7 +151,12 @@ compile_darknet() {
     cd build
     
     print_message "Configurando CMake..."
-    cmake .. -DCMAKE_BUILD_TYPE=Release
+    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release"
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DENABLE_CUDA=$ENABLE_CUDA"
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DENABLE_OPENCV=$ENABLE_OPENCV"
+    
+    print_message "Opciones de compilación: CUDA=$ENABLE_CUDA, OpenCV=$ENABLE_OPENCV"
+    cmake .. $CMAKE_OPTIONS
     
     print_message "Compilando... (esto puede tomar varios minutos)"
     if [[ "$OS" == "macos" ]]; then
@@ -169,8 +184,7 @@ check_yolo_model() {
     
     if [ ! -f "darknet/yolov4-tiny.weights" ]; then
         print_warning "Modelo yolov4-tiny.weights no encontrado. Descargando..."
-        wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights \
-             -O darknet/yolov4-tiny.weights
+        wget $YOLO_WEIGHTS_URL -O darknet/yolov4-tiny.weights
         print_message "Modelo descargado exitosamente"
     else
         print_message "Modelo yolov4-tiny.weights encontrado"
@@ -244,6 +258,28 @@ verify_installation() {
     print_message "Verificación completada exitosamente"
 }
 
+# Cargar configuración
+load_config() {
+    # Valores por defecto
+    DARKNET_VERSION="v3.0.53"
+    DARKNET_REPO="https://github.com/hank-ai/darknet.git"
+    YOLO_WEIGHTS_URL="https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights"
+    ENABLE_CUDA="OFF"
+    ENABLE_OPENCV="ON"
+    
+    # Si existe .env, cargar configuración personalizada
+    if [ -f ".env" ]; then
+        print_message "Cargando configuración desde .env"
+        source .env
+    elif [ -f ".env.example" ]; then
+        print_message "Usando configuración por defecto (.env.example)"
+        cp .env.example .env
+        source .env
+    fi
+    
+    print_message "Versión de Darknet configurada: $DARKNET_VERSION"
+}
+
 # Función principal
 main() {
     echo "========================================"
@@ -251,6 +287,9 @@ main() {
     echo "       Multi-Cámara con YOLO           "
     echo "========================================"
     echo
+    
+    # Cargar configuración
+    load_config
     
     # Detectar OS
     detect_os
