@@ -51,8 +51,8 @@ Deteccion/
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/deteccion-yolo.git
-cd deteccion-yolo
+git clone https://github.com/CoBaX756/Darknet-CamerasControler.git
+cd Darknet-CamerasControler
 
 # Ejecutar script de instalación
 chmod +x install.sh
