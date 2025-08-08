@@ -126,6 +126,13 @@ compile_darknet() {
     
     cd darknet
     
+    # Limpiar archivos de caché de CMake (importante para portabilidad)
+    if [ -f "CMakeCache.txt" ]; then
+        print_message "Limpiando caché de CMake..."
+        rm -f CMakeCache.txt
+        rm -rf CMakeFiles
+    fi
+    
     # Limpiar builds anteriores
     if [ -d "build" ]; then
         print_message "Limpiando build anterior..."

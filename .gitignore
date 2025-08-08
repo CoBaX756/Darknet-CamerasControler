@@ -40,9 +40,12 @@ dist/
 # Darknet - Ahora incluido en el repositorio
 # darknet/  # Comentado - Darknet ahora se incluye con el proyecto
 
-# Build directories (pero permitir darknet/build que ya está compilado)
+# Build directories y archivos de CMake
+darknet/build/
 darknet/build2/
 darknet/old_CMakeFiles/
+darknet/CMakeFiles/
+darknet/CMakeCache.txt
 *.cmake
 !darknet/CM*.cmake
 *.o
