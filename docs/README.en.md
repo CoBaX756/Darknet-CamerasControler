@@ -1,6 +1,6 @@
 # Multi-Camera Detection System with YOLO
 
-[🇪🇸 Versión en Español](README.md)
+[🇪🇸 Versión en Español](../README.md)
 
 Complete real-time object detection system with support for multiple RTSP cameras using YOLOv4-tiny and Darknet.
 
@@ -214,9 +214,9 @@ Contributions are welcome! Please:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](licenses/LICENSE) file for details.
 
-**Important note:** This project uses Darknet (Hank.ai fork) which is licensed under Apache License 2.0. The `darknet/` directory is not included in this repository and must be downloaded separately. See [SETUP_DARKNET.md](SETUP_DARKNET.md) for more information.
+**Important note:** This project uses Darknet (Hank.ai fork) which is licensed under Apache License 2.0. The `darknet/` directory is not included in this repository and must be downloaded separately. See [SETUP_DARKNET.md](setup/SETUP_DARKNET.md) for more information.
 
 ## Support
 
