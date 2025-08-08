@@ -47,7 +47,20 @@ Deteccion/
 
 ## Instalación Rápida
 
-### Opción 1: Script Automático (Recomendado)
+### Opción 1: Descarga Directa (Sin Git)
+
+```bash
+# Descargar como ZIP
+wget https://github.com/CoBaX756/Darknet-CamerasControler/archive/refs/heads/main.zip
+unzip main.zip
+cd Darknet-CamerasControler-main
+
+# Ejecutar script de instalación
+chmod +x install.sh
+./install.sh
+```
+
+### Opción 2: Clonar con Git
 
 ```bash
 # Clonar el repositorio
@@ -59,7 +72,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-### Opción 2: Instalación Manual
+### Opción 3: Instalación Manual
 
 1. **Instalar dependencias del sistema:**
    ```bash
