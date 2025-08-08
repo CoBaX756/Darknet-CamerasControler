@@ -147,6 +147,7 @@ compile_darknet() {
     CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release"
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DENABLE_CUDA=$ENABLE_CUDA"
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DENABLE_OPENCV=$ENABLE_OPENCV"
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DBUILD_SHARED_LIBS=ON"
     
     print_message "Opciones de compilación: CUDA=$ENABLE_CUDA, OpenCV=$ENABLE_OPENCV"
     cmake .. $CMAKE_OPTIONS
@@ -157,6 +158,21 @@ compile_darknet() {
     else
         make -j$(nproc)
     fi
+    
+    # Verificar que los ejecutables principales se compilaron
+    if [ ! -f "src-cli/darknet" ]; then
+        print_error "El ejecutable darknet no se compiló correctamente"
+        exit 1
+    fi
+    
+    if [ ! -f "src-examples/simple_stream_progressive" ]; then
+        print_warning "simple_stream_progressive no se compiló, intentando compilar manualmente..."
+        # Intentar compilar simple_stream_progressive específicamente
+        make simple_stream_progressive || true
+    fi
+    
+    # Hacer ejecutables todos los binarios compilados
+    find . -type f -executable -path "*/src-*/*" -exec chmod +x {} \;
     
     cd ../..
     print_message "Darknet compilado exitosamente"
@@ -233,17 +249,28 @@ verify_installation() {
     fi
     
     # Verificar Darknet
-    if [ -f "darknet/build/darknet" ] || [ -f "darknet/darknet" ] || [ -f "darknet/build/src-cli/darknet" ]; then
-        print_message "Darknet compilado correctamente"
-        # Si está en src-cli, crear enlace simbólico para compatibilidad
-        if [ -f "darknet/build/src-cli/darknet" ] && [ ! -f "darknet/build/darknet" ]; then
-            ln -sf src-cli/darknet darknet/build/darknet
-        fi
+    if [ -f "darknet/build/src-cli/darknet" ]; then
+        print_message "Darknet compilado correctamente en darknet/build/src-cli/darknet"
+    elif [ -f "darknet/build/darknet" ]; then
+        print_message "Darknet compilado correctamente en darknet/build/darknet"
+    elif [ -f "darknet/darknet" ]; then
+        print_message "Darknet compilado correctamente en darknet/darknet"
     else
         print_error "Darknet no se compiló correctamente"
         print_message "Buscando ejecutable darknet..."
         find darknet -name "darknet" -type f -executable 2>/dev/null || true
         exit 1
+    fi
+    
+    # Verificar simple_stream_progressive
+    if [ -f "darknet/build/src-examples/simple_stream_progressive" ]; then
+        print_message "simple_stream_progressive compilado correctamente"
+        # Hacer ejecutable si no lo es
+        chmod +x darknet/build/src-examples/simple_stream_progressive 2>/dev/null || true
+    else
+        print_error "simple_stream_progressive no se compiló"
+        print_message "Buscando ejecutables de streaming..."
+        find darknet/build/src-examples -name "*stream*" -type f -executable 2>/dev/null || true
     fi
     
     print_message "Verificación completada exitosamente"
