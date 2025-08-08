@@ -212,7 +212,9 @@ Las contribuciones son bienvenidas. Por favor:
 
 ## Licencia
 
-MIT License - ver el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está licenciado bajo MIT License - ver el archivo [LICENSE](LICENSE) para más detalles.
+
+**Nota importante:** Este proyecto utiliza Darknet (fork de Hank.ai) que está licenciado bajo Apache License 2.0. El directorio `darknet/` no está incluido en este repositorio y debe ser descargado por separado. Ver [SETUP_DARKNET.md](SETUP_DARKNET.md) para más información.
 
 ## Soporte
 

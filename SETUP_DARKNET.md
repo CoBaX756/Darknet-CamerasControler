@@ -4,11 +4,11 @@ Darknet es el framework de detección de objetos que utiliza este proyecto. Debi
 
 ## Instalación de Darknet
 
-### Opción 1: Clonar el repositorio oficial (Recomendado)
+### Opción 1: Clonar el repositorio de Hank.ai (Recomendado)
 
 ```bash
 # Desde el directorio raíz del proyecto
-git clone https://github.com/AlexeyAB/darknet.git darknet
+git clone https://github.com/hank-ai/darknet.git darknet
 cd darknet
 
 # Compilar Darknet
@@ -22,7 +22,7 @@ cd ../..
 
 ```bash
 # Desde el directorio raíz del proyecto
-git submodule add https://github.com/AlexeyAB/darknet.git darknet
+git submodule add https://github.com/hank-ai/darknet.git darknet
 git submodule update --init --recursive
 
 # Compilar Darknet
@@ -144,8 +144,17 @@ Si no tienes GPU NVIDIA, compila sin CUDA:
 cmake .. -DENABLE_CUDA=OFF -DENABLE_CUDNN=OFF
 ```
 
+## Licencia de Darknet
+
+Darknet (fork de Hank.ai) está licenciado bajo Apache License 2.0. Esto significa que:
+- Puedes usar, modificar y distribuir el código
+- Debes incluir el aviso de copyright y la licencia Apache 2.0
+- Debes documentar cualquier cambio significativo que hagas
+- Es compatible con la licencia MIT de este proyecto
+
 ## Más información
 
-- Repositorio oficial: https://github.com/AlexeyAB/darknet
-- Documentación: https://github.com/AlexeyAB/darknet/wiki
+- Repositorio Hank.ai Darknet: https://github.com/hank-ai/darknet
+- Repositorio original AlexeyAB: https://github.com/AlexeyAB/darknet
+- Documentación Hank.ai: https://darknetcv.ai/
 - Modelos pre-entrenados: https://github.com/AlexeyAB/darknet/releases

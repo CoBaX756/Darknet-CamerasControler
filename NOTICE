@@ -1,0 +1,34 @@
+Sistema de Detección Multi-Cámara con YOLO
+Copyright (c) 2024 [Tu Nombre o Organización]
+
+This product includes software developed by third parties:
+
+================================================================================
+Darknet Neural Network Framework
+================================================================================
+Copyright 2024 Hank.ai and contributors
+Licensed under the Apache License, Version 2.0
+
+The Darknet framework is used as a core component for object detection
+but is not included in this repository. Users must obtain it separately
+from: https://github.com/hank-ai/darknet
+
+================================================================================
+YOLO (You Only Look Once)
+================================================================================
+YOLOv4 implementation by Alexey Bochkovskiy
+Original YOLO concept by Joseph Redmon
+
+The YOLO algorithm and pre-trained weights are used for object detection.
+Weights must be downloaded separately.
+
+================================================================================
+Node.js Dependencies
+================================================================================
+This project uses various npm packages, each with their own licenses:
+- Express.js (MIT License)
+- Socket.io (MIT License)
+- Other dependencies as listed in package.json
+
+All third-party licenses are compatible with this project's MIT license.
+Please refer to each dependency's documentation for specific license terms.
