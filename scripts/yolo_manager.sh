@@ -25,7 +25,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"  # Directorio principal del proyecto
 PID_FILE="$PROJECT_DIR/.yolo_server.pid"
 LOG_FILE="$PROJECT_DIR/yolo_server.log"
 SERVER_PORT=3000
-PANEL_URL="http://localhost:$SERVER_PORT/camera_panel_v2.html"
+PANEL_URL="http://localhost:$SERVER_PORT/src/frontend/panel.html"
 
 # Función para mostrar el banner
 show_banner() {
